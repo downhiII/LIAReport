@@ -1,0 +1,168 @@
+/* This program is to remote control an Arduino car with an IR remote
+The main theme is digital input and output using the IRremote library
+The program uses an IR receiver to decode the signals from the remote
+and uses an L293D motor driver shield to control the four gear motors of the car
+The program defines the functions for moving the car in different directions
+and uses the millis() function to control the duration of the movement
+*/
+#include <IRremote.h> // include the IRremote library
+#define DECODE_NEC // define the protocol for decoding the IR signals
+#define IR_RECEIVE_PIN 9 // define the pin for the IR receiver
+#define Forward 70 // define the IR command for moving forward
+#define Right 67 // define the IR command for moving right
+#define Left 68 // define the IR command for moving left
+#define Back 21 // define the IR command for moving backward
+int STB = 3; // define the pin for the standby mode of the motor driver shield
+
+unsigned long premillis; // declare a variable to store the previous time
+// Motor A
+int PMWA = 5; // define the pin for the speed of motor A
+int AIN1 = 7; // define the pin for the direction of motor A
+
+
+// Motor B
+int PMWB = 6; // define the pin for the speed of motor B
+int BIN1 = 8; // define the pin for the direction of motor B
+
+void setup() {
+  Serial.begin(9600); // initialize the serial communication
+  pinMode(13, OUTPUT); // set the pin 13 as output
+  IrReceiver.begin(IR_RECEIVE_PIN); // initialize the IR receiver
+
+digitalWrite(STB, 1);// set the standby mode to HIGH
+
+pinMode(PMWA, OUTPUT); // set the pin for motor A speed as output
+pinMode(AIN1, OUTPUT); // set the pin for motor A direction as output
+pinMode(PMWB, OUTPUT); // set the pin for motor B speed as output
+pinMode(BIN1, OUTPUT); // set the pin for motor B direction as output
+
+}
+
+void forward() {
+
+// Motor A
+digitalWrite(BIN1, 1); // set the direction of motor A to forward
+analogWrite(PMWB, 150); // set the speed of motor A to 150
+
+// Motor B
+digitalWrite(AIN1, 1); // set the direction of motor B to forward
+analogWrite(PMWA, 150); // set the speed of motor B to 150
+
+}
+
+void backward() {
+
+// Motor A
+digitalWrite(BIN1, 0); // set the direction of motor A to backward
+analogWrite(PMWB, 150); // set the speed of motor A to 150
+
+// Motor B
+digitalWrite(AIN1, 0); // set the direction of motor B to backward
+analogWrite(PMWA, 150); // set the speed of motor B to 150
+
+
+
+}
+
+void left(){
+// Motor A
+digitalWrite(BIN1, 0); // set the direction of motor A to backward
+analogWrite(PMWB, 75); // set the speed of motor A to 75
+
+// Motor B
+digitalWrite(AIN1, 1); // set the direction of motor B to forward
+analogWrite(PMWA, 75); // set the speed of motor B to 75
+
+}
+void right(){
+// Motor A
+digitalWrite(BIN1, 1); // set the direction of motor A to forward
+analogWrite(PMWB, 75); // set the speed of motor A to 75
+
+// Motor B
+digitalWrite(AIN1, 0); // set the direction of motor B to backward
+analogWrite(PMWA, 75); // set the speed of motor B to 75
+
+
+}
+void left_forward(){
+// Motor A
+digitalWrite(BIN1, 1); // set the direction of motor A to forward
+analogWrite(PMWB, 75); // set the speed of motor A to 75
+
+// Motor B
+digitalWrite(AIN1, 1); // set the direction of motor B to forward
+analogWrite(PMWA, 150); // set the speed of motor B to 150
+}
+
+void left_backward(){
+// Motor A
+digitalWrite(BIN1, 0); // set the direction of motor A to backward
+analogWrite(PMWB, 75); // set the speed of motor A to 75
+
+// Motor B
+digitalWrite(AIN1, 0); // set the direction of motor B to backward
+analogWrite(PMWA, 150); // set the speed of motor B to 150
+}
+void right_forward(){
+// Motor A
+digitalWrite(BIN1, 1); // set the direction of motor A to forward
+analogWrite(PMWB, 150); // set the speed of motor A to 150
+
+// Motor B
+digitalWrite(AIN1, 1); // set the direction of motor B to forward
+analogWrite(PMWA, 100); // set the speed of motor B to 100
+}
+
+void right_backward(){
+// Motor A
+digitalWrite(BIN1, 0); // set the direction of motor A to backward
+analogWrite(PMWB, 150); // set the speed of motor A to 150
+
+// Motor B
+digitalWrite(AIN1, 0); // set the direction of motor B to backward
+analogWrite(PMWA, 75); // set the speed of motor B to 75
+}
+
+void Stop(){
+// Motor A
+digitalWrite(BIN1, 0); // set the direction of motor A to stop
+analogWrite(PMWB, 0); // set the speed of motor A to 0
+
+// Motor B
+digitalWrite(AIN1, 1); // set the direction of motor B to stop
+analogWrite(PMWA, 0); // set the speed of motor B to 0
+}
+void loop() {
+  if (IrReceiver.decode()) { // if the IR receiver has decoded a signal
+    premillis = millis(); // update the previous time with the current time
+    IrReceiver.resume(); // resume the IR receiver for the next signal
+    int command = IrReceiver.decodedIRData.command; // get the IR command from the decoded data
+    switch (command) { // use the switch statement to handle the different commands
+      case Forward: { // if the command is forward
+        forward(); // call the forward function
+        break; // break out of the switch statement
+      }
+      case Right: { // if the command is right
+        right(); // call the right function
+        break; // break out of the switch statement
+      }
+      case Left: { // if the command is left
+        left(); // call the left function
+        break; // break out of the switch statement
+      }
+      case Back: { // if the command is backward
+        backward(); // call the backward function
+        break; // break out of the switch statement
+      }
+     
+      
+      
+    }
+  } else { // if the IR receiver has not decoded a signal
+    if (millis() - premillis > 100) { // if more than 100 milliseconds have passed since the last signal
+      Stop(); // call the stop function
+      premillis = millis(); // update the previous time with the current time
+    }
+  }
+}
