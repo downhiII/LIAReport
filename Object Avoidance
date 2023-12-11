@@ -1,0 +1,189 @@
+/* 
+This program is an obstacle avoidance of an arduino car
+The main theme is using digital input from an ultrasonic sensor and a servo motor to control digital output to the wheels of the car
+The program makes the car move forward until it detects an obstacle within a certain distance
+Then it makes the car stop and turn the servo right then left, depending on the distance on the left and right sides
+The program uses functions to define the different movements of the car and the ultrasonic sensor
+*/
+
+//Sensor
+  #define trigPin 13 // defines the output ultrasonic value pin.
+  #define echoPin 12 // defines the input ultrasonic value pin.
+  float duration, distance; // setting up variables for the duration before the wave is received and calculates the distance
+//Servo
+ #include <Servo.h> // adds servo motor library.
+  Servo myservo;  // create servo object to control a servo.
+
+// Motor A
+int PMWA = 5; // define the pin for the speed of motor A
+int AIN1 = 7; // define the pin for the direction of motor A
+
+
+// Motor B
+int PMWB = 6; // define the pin for the speed of motor B
+int BIN1 = 8; // define the pin for the direction of motor B
+
+int STB = 3; // define the pin for the standby mode of the motor driver shield
+void setup() {
+//Sensor
+Serial.begin(9600);
+//Servo
+myservo.attach(10);
+
+
+pinMode(trigPin, OUTPUT);// setting pin 10 as an output for trigPin
+pinMode(echoPin, INPUT);// setting pin 13 as an input for echoPin
+digitalWrite(STB, 1);// sets stanby HIGH
+pinMode(PMWA, OUTPUT); // set the pin for motor A speed as output
+pinMode(AIN1, OUTPUT); // set the pin for motor A direction as output
+pinMode(PMWB, OUTPUT); // set the pin for motor B speed as output
+pinMode(BIN1, OUTPUT); // set the pin for motor B direction as output
+
+}
+void Ultrasonic(){
+
+  digitalWrite(trigPin, LOW); // sets trigger pin off.
+  delayMicroseconds(2); // delays for 2 microseconds.
+  digitalWrite(trigPin, HIGH);; // sets trigger pin on.
+  delayMicroseconds(10); // delays for 10 microseconds.
+  digitalWrite(trigPin, LOW);; // sets trigger pin off.
+  duration = pulseIn(echoPin, HIGH);; // reads the value returned from pin 13 and stores it in duration(of wave).
+  distance = (duration / 2) * 0.0343; // converts duration into distance in metric centimeters.
+}
+void forward() {
+
+// Motor A
+digitalWrite(BIN1, 1); // set the direction of motor A to forward
+analogWrite(PMWB, 200); // set the speed of motor A to 200
+
+// Motor B
+digitalWrite(AIN1, 1); // set the direction of motor B to forward
+analogWrite(PMWA, 200); // set the speed of motor B to 200
+
+}
+
+void backward() {
+
+// Motor A
+digitalWrite(BIN1, 0); // set the direction of motor A to backward
+analogWrite(PMWB, 200); // set the speed of motor A to 200
+
+// Motor B
+digitalWrite(AIN1, 0); // set the direction of motor B to backward
+analogWrite(PMWA, 200); // set the speed of motor B to 200
+
+
+
+}
+
+void left(){
+// Motor A
+digitalWrite(BIN1, 0); // set the direction of motor A to backward
+analogWrite(PMWB, 150); // set the speed of motor A to 150
+
+// Motor B
+digitalWrite(AIN1, 1); // set the direction of motor B to forward
+analogWrite(PMWA, 150); // set the speed of motor B to 150
+
+}
+void right(){
+// Motor A
+digitalWrite(BIN1, 1); // set the direction of motor A to forward
+analogWrite(PMWB, 150); // set the speed of motor A to 150
+
+// Motor B
+digitalWrite(AIN1, 0); // set the direction of motor B to backward
+analogWrite(PMWA, 150); // set the speed of motor B to 150
+
+
+}
+void left_forward(){
+// Motor A
+digitalWrite(BIN1, 1); // set the direction of motor A to forward
+analogWrite(PMWB, 150); // set the speed of motor A to 150
+
+// Motor B
+digitalWrite(AIN1, 1); // set the direction of motor B to forward
+analogWrite(PMWA, 200); // set the speed of motor B to 200
+}
+
+void left_backward(){
+// Motor A
+digitalWrite(BIN1, 0); // set the direction of motor A to backward
+analogWrite(PMWB, 150); // set the speed of motor A to 150
+
+// Motor B
+digitalWrite(AIN1, 0); // set the direction of motor B to backward
+analogWrite(PMWA, 200); // set the speed of motor B to 200
+}
+void right_forward(){
+// Motor A
+digitalWrite(BIN1, 1); // set the direction of motor A to forward
+analogWrite(PMWB, 200); // set the speed of motor A to 200
+
+// Motor B
+digitalWrite(AIN1, 1); // set the direction of motor B to forward
+analogWrite(PMWA, 100); // set the speed of motor B to 100
+}
+
+void right_backward(){
+// Motor A
+digitalWrite(BIN1, 0); // set the direction of motor A to backward
+analogWrite(PMWB, 200); // set the speed of motor A to 200
+
+// Motor B
+digitalWrite(AIN1, 0); // set the direction of motor B to backward
+analogWrite(PMWA, 150); // set the speed of motor B to 150
+}
+
+void Stop(){
+// Motor A
+digitalWrite(BIN1, 0); // set the direction of motor A to stop
+analogWrite(PMWB, 0); // set the speed of motor A to 0
+
+// Motor B
+digitalWrite(AIN1, 1); // set the direction of motor B to stop
+analogWrite(PMWA, 0); // set the speed of motor B to 0
+}
+void loop() {
+  forward(); // used forward function with a speed of 200.
+  myservo.write(90); // servo motor goes back to default position.      
+  Ultrasonic(); // reads the value of the Ultrasonic sensor.
+if (distance <= 20) { // checks the distance between the ultrasonic and an obstacle if it is less than 25 centimeters it executes the following statements:
+
+  Stop(); // the robot stop to avoid collision
+  myservo.write(0); // servo looks at the left side for ultrasonic to read values.
+  delay(1000); // delay for 1 second after looking around.
+  Ultrasonic(); // reads the value of the Ultrasonic sensor.
+  myservo.write(90); // servo motor goes back to default position.
+
+if (distance <= 25) { // checks the distance between the ultrasonic and an obstacle if it is less than 25 centimeters it executes the following statements:
+
+  myservo.write(180); // servo looks at the right side for ultrasonic to read values.
+  delay(1000); // delay for 1 second after looking around.
+  Ultrasonic(); // reads the value of the Ultrasonic sensor.
+  myservo.write(90); // Servo motor goes back to default position.  
+
+if (distance <= 20) { // checks the distance between the ultrasonic and an obstacle if it is less than 25 centimeters it executes the following statements:
+
+backward();
+delay(2000);
+right();
+delay(750);
+}
+
+else{
+  left(); // used left function with a duration of 0.6 seconds and a speed of 100 when left side has obstacles to avoid collision.
+  delay(250); // duration.
+
+
+}
+}
+else{
+
+  right(); // used right function with a duration of 0.6 seconds and a speed of 100 when left side has obstacles to avoid collision.
+  delay(250); // duration
+
+}
+}
+}
