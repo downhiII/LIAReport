@@ -1,0 +1,192 @@
+/* This program is a line follower of Arduino car
+   The main theme is to use analog input from infrared sensors
+   to control the digital output of the DC motors
+   The program uses a switch-case structure to implement different states
+   of the robot depending on the sensor readings
+*/
+int middleR; // variable to store the analog reading from the middle sensor
+int rightR; // variable to store the analog reading from the right sensor
+int leftR; // variable to store the analog reading from the left sensor
+enum State {step1,step2,step3,step4,step5}; // enumeration of the possible states
+State myState = step1; // variable to store the current state, initialized to step1
+
+int STB = 3; // pin number for the standby mode of the motor driver
+
+
+// Motor A
+int PMWA = 5; // pin number for the pulse width modulation of motor A
+int AIN1 = 7; // pin number for the direction of motor A
+
+
+// Motor B
+int PMWB = 6; // pin number for the pulse width modulation of motor B
+int BIN1 = 8; // pin number for the direction of motor B
+
+
+
+void setup() {
+
+pinMode(middleR, INPUT); // set the middle sensor pin as input
+pinMode(leftR, INPUT); // set the left sensor pin as input
+pinMode(rightR, INPUT); // set the right sensor pin as input
+Serial.begin(9600); // start the serial communication at 9600 baud rate
+digitalWrite(STB, 1);// set the standby mode to HIGH
+
+pinMode(PMWA, OUTPUT); // set the PMWA pin as output
+pinMode(AIN1, OUTPUT); // set the AIN1 pin as output
+pinMode(PMWB, OUTPUT); // set the PMWB pin as output
+pinMode(BIN1, OUTPUT); // set the BIN1 pin as output
+
+}
+
+void forward() {
+
+// Motor A
+digitalWrite(BIN1, 1); // set the direction of motor A to forward
+analogWrite(PMWB, 150); // set the speed of motor A to 150
+
+// Motor B
+digitalWrite(AIN1, 1); // set the direction of motor B to forward
+analogWrite(PMWA, 150); // set the speed of motor B to 150
+
+}
+
+void backward() {
+
+// Motor A
+digitalWrite(BIN1, 0); // set the direction of motor A to backward
+analogWrite(PMWB, 150); // set the speed of motor A to 150
+
+// Motor B
+digitalWrite(AIN1, 0); // set the direction of motor B to backward
+analogWrite(PMWA, 150); // set the speed of motor B to 150
+
+
+
+}
+
+void left(){
+// Motor A
+digitalWrite(BIN1, 0); // set the direction of motor A to backward
+analogWrite(PMWB, 75); // set the speed of motor A to 75
+
+// Motor B
+digitalWrite(AIN1, 1); // set the direction of motor B to forward
+analogWrite(PMWA, 75); // set the speed of motor B to 75
+
+}
+void right(){
+// Motor A
+digitalWrite(BIN1, 1); // set the direction of motor A to forward
+analogWrite(PMWB, 75); // set the speed of motor A to 75
+
+// Motor B
+digitalWrite(AIN1, 0); // set the direction of motor B to backward
+analogWrite(PMWA, 75); // set the speed of motor B to 75
+
+
+}
+void left_forward(){
+// Motor A
+digitalWrite(BIN1, 1); // set the direction of motor A to forward
+analogWrite(PMWB, 75); // set the speed of motor A to 75
+
+// Motor B
+digitalWrite(AIN1, 1); // set the direction of motor B to forward
+analogWrite(PMWA, 150); // set the speed of motor B to 150
+}
+
+void left_backward(){
+// Motor A
+digitalWrite(BIN1, 0); // set the direction of motor A to backward
+analogWrite(PMWB, 75); // set the speed of motor A to 75
+
+// Motor B
+digitalWrite(AIN1, 0); // set the direction of motor B to backward
+analogWrite(PMWA, 150); // set the speed of motor B to 150
+}
+void right_forward(){
+// Motor A
+digitalWrite(BIN1, 1); // set the direction of motor A to forward
+analogWrite(PMWB, 150); // set the speed of motor A to 150
+
+// Motor B
+digitalWrite(AIN1, 1); // set the direction of motor B to forward
+analogWrite(PMWA, 100); // set the speed of motor B to 100
+}
+
+void right_backward(){
+// Motor A
+digitalWrite(BIN1, 0); // set the direction of motor A to backward
+analogWrite(PMWB, 150); // set the speed of motor A to 150
+
+// Motor B
+digitalWrite(AIN1, 0); // set the direction of motor B to backward
+analogWrite(PMWA, 75); // set the speed of motor B to 75
+}
+
+void Stop(){
+// Motor A
+digitalWrite(BIN1, 0); // set the direction of motor A to stop
+analogWrite(PMWB, 0); // set the speed of motor A to 0
+
+// Motor B
+digitalWrite(AIN1, 1); // set the direction of motor B to stop
+analogWrite(PMWA, 0); // set the speed of motor B to 0
+}
+
+
+
+void loop() {
+middleR = analogRead(A1); // read the analog value from the middle sensor
+leftR = analogRead(A0); // read the analog value from the left sensor
+rightR = analogRead(A2); // read the analog value from the right sensor
+
+switch (myState){ // switch the state based on the current value of myState
+  case step1: // case 1: all sensors are on the line
+  if (middleR > 600 && rightR > 600 && leftR > 600){ // if all sensors are above 600, meaning they are on the black line
+   Stop(); // stop the robot
+  }
+   else if ( leftR < 50 && rightR < 50 && middleR < 50){ // if all sensors are below 50, meaning they are off the line
+  right(); // turn right to find the line
+   }
+  else if (middleR < 700){ // if the middle sensor is below 700, meaning it is on the white surface
+    myState = step2; // change the state to 2
+  }
+  break; // break out of the case
+  
+  case step2: // case 2: only the middle sensor is on the line
+  if (middleR > 600 && middleR < 700){ // if the middle sensor is between 600 and 700, meaning it is on the black line
+    forward(); // move the robot forward
+  }
+  else if (middleR < 600){ // if the middle sensor is below 600, meaning it is on the white surface
+    myState = step3; // change the state to 3
+  }
+    else { // otherwise
+    myState = step1; // change the state to 1
+  }
+  break; // break out of the case
+  case step3: // case 3: the right sensor is on the line
+  if (rightR > 600 && middleR < 600){ // if the right sensor is above 600 and the middle sensor is below 600, meaning the line is on the right
+    left(); // turn the robot left to follow the line
+  }
+  else if (rightR < 600){ // if the right sensor is below 600, meaning it is on the white surface
+    myState = step4; // change the state to 4
+  }
+  else { // otherwise
+    myState = step1; // change the state to 1
+  }
+  break; // break out of the case
+  case step4: // case 4: the left sensor is on the line
+    if (leftR > 600 && middleR < 600){ // if the left sensor is above 600 and the middle sensor is below 600, meaning the line is on the left
+    right(); // turn the robot right to follow the line
+  }
+  else if (leftR < 600){ // if the left sensor is below 600, meaning it is on the white surface
+    myState = step1; // change the state to 1
+  }
+    else { // otherwise
+    myState = step1; // change the state to 1
+  }
+  break; // break out of the case
+}
+}
